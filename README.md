@@ -15,7 +15,7 @@ This project contains sample Bash and Python scripts along with C++ CGAL executa
 First clone this project
 
 ```shell
-git clone https://github.com/
+git clone https://github.com/ignfab/building-roof-pipeline.git
 ```
 
 The prefered solution for running the Python scripts is `venv`.
