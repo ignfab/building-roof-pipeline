@@ -1,0 +1,268 @@
+#!/usr/bin/env bash
+
+########
+# Help #
+########
+
+Help()
+{
+   # Display Help
+   echo "Download and compile necessary C++ libraries."
+   echo
+   echo "Syntax: cpplibs [-h|d|c] "
+   echo "options:"
+   echo "-d     Download libs."
+   echo "-c     Compile libs."
+   echo
+}
+
+##################
+# Init variables #
+##################
+
+# Relevant CGAL documentation
+# https://doc.cgal.org/latest/Manual/thirdparty.html
+
+# Directories
+SCRIPT_DIR="$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )"
+DL_DIR=$SCRIPT_DIR/cpplibs
+
+# see cmake_minimum_required in cgal source code or refer to documentation
+cmake_version=$cmake
+cmake_archive=cmake-$cmake_version.tar.gz
+cmake_dir=$DL_DIR/cmake-$cmake_version
+
+cgal_version=$cgal
+cgal_archive=CGAL-$cgal_version.tar.xz
+cgal_dir=$DL_DIR/CGAL-$cgal_version
+
+# See here also https://doc.cgal.org/latest/Manual/configurationvariables.html#title7
+boost_version=$boost
+boost_snake_version=${boost_version//./_}
+boost_archive=boost_$boost_snake_version.tar.gz
+boost_dir=$DL_DIR/boost_$boost_snake_version
+
+gmp_version=$gmp
+gmp_archive=gmp-$gmp_version.tar.xz
+gmp_dir=$DL_DIR/gmp-$gmp_version
+
+mpfr_version=$mpfr
+mpfr_archive=mpfr-$mpfr_version.tar.xz
+mpfr_dir=$DL_DIR/mpfr-$mpfr_version
+
+eigen_version=$eigen
+eigen_archive=eigen-$eigen_version.tar.gz
+eigen_dir=$DL_DIR/eigen-$eigen_version
+
+glpk_version=$glpk
+glpk_archive=glpk-$glpk_version.tar.gz
+glpk_dir=$DL_DIR/glpk-$glpk_version
+
+ipopt_version=$ipopt
+ipopt_archive=$ipopt_version.tar.gz
+ipopt_dir=$DL_DIR/Ipopt-releases-$ipopt_version
+
+hmetis_version=$hmetis
+hmetis_archive=hmetis-$hmetis_version-linux.tar.gz
+hmetis_dir=$DL_DIR/hmetis-$hmetis_version-linux
+
+criterion_version=$criterion
+criterion_archive=criterion-$criterion_version-linux-x86_64.tar.xz
+criterion_dir=$DL_DIR/criterion-$criterion_version
+
+scip_version=$scip
+scip_archive=scipoptsuite-$scip_version.tgz
+scip_dir=$DL_DIR/scipoptsuite-$scip_version
+
+#################
+# Download libs #
+#################
+
+WgetURL()
+{
+    cd $1
+    wget --retry-connrefused --waitretry=1 --timeout=15 --read-timeout=20 --quiet $2
+    if [ $? -ne 0 ]
+    then
+      echo "Cannot download $2"
+      exit 1
+    else
+      echo "$2 successfully downloaded"
+    fi
+}
+
+Download()
+{
+
+    # remove download directory
+    if [[ -d "$DL_DIR" ]]
+    then
+        rm -rf $DL_DIR
+    fi
+
+    # create download directory and enter it
+    mkdir $DL_DIR && cd $_
+
+    # CMAKE
+    WgetURL $DL_DIR "https://github.com/Kitware/CMake/releases/download/v$cmake_version/$cmake_archive"
+    tar -xzf $cmake_archive
+    rm $cmake_archive
+
+    # CGAL
+    WgetURL $DL_DIR "https://github.com/CGAL/cgal/releases/download/v$cgal_version/$cgal_archive"
+    tar -xf $cgal_archive
+    rm $cgal_archive
+
+    # BOOST
+    WgetURL $DL_DIR "https://boostorg.jfrog.io/artifactory/main/release/$boost_version/source/$boost_archive"
+    tar -zxf $boost_archive
+    rm $boost_archive
+
+    # GMP
+    WgetURL $DL_DIR "https://gmplib.org/download/gmp/$gmp_archive"
+    tar -xf $gmp_archive
+    rm $gmp_archive
+
+    # MPFR
+    WgetURL $DL_DIR "https://www.mpfr.org/mpfr-current/$mpfr_archive"
+    tar -xf $mpfr_archive
+    rm $mpfr_archive
+
+    # EIGEN
+    WgetURL $DL_DIR "https://gitlab.com/libeigen/eigen/-/archive/$eigen_version/$eigen_archive"
+    tar -zxf $eigen_archive
+    rm $eigen_archive
+
+    # GLPK
+    WgetURL $DL_DIR "http://ftp.gnu.org/gnu/glpk/$glpk_archive"
+    tar -zxf $glpk_archive
+    rm $glpk_archive
+
+    # IPOPT is required for SCIP
+    WgetURL $DL_DIR "https://github.com/coin-or/Ipopt/archive/refs/tags/releases/$ipopt_archive"
+    tar -zxf $ipopt_archive
+    rm $ipopt_archive
+
+    # HMETIS
+    WgetURL $DL_DIR "http://glaros.dtc.umn.edu/gkhome/fetch/sw/hmetis/$hmetis_archive"
+    tar -zxf $hmetis_archive
+    rm $hmetis_archive
+
+    # CRITERION
+    WgetURL $DL_DIR "https://github.com/Snaipe/Criterion/releases/download/v2.4.1/$criterion_archive"
+    tar -xf $criterion_archive
+    rm $criterion_archive
+
+    # SCIP
+    WgetURL $DL_DIR "https://www.scipopt.org/download/release/$scip_archive"
+    tar -zxf $scip_archive
+    rm $scip_archive
+
+}
+
+# Compilation des libs
+
+Compile()
+{
+    # Check if m4 is available
+    if ! command -v m4 &> /dev/null
+    then
+        echo "m4 could not be found. GMP compilation will fail. Exiting"
+        exit
+    fi
+
+    # CMAKE
+    cd $cmake_dir
+    mkdir install
+    ./bootstrap --prefix=$cmake_dir/install --parallel=$(nproc)
+    make clean
+    make -j$(nproc)
+    make install
+    export PATH="$cmake_dir/install/bin:$PATH"
+
+    # GMP requires m4
+    cd $gmp_dir
+    mkdir install
+    ./configure --enable-cxx --prefix=$gmp_dir/install
+    make clean
+    make -j$(nproc)
+    make -j$(nproc) check
+    make install
+
+    # MPFR
+    cd $mpfr_dir
+    mkdir install
+    ./configure --prefix=$mpfr_dir/install --with-gmp=$gmp_dir/install
+    make clean
+    make -j$(nproc)
+    make -j$(nproc) check
+    make install
+
+    # GLPK
+    cd $glpk_dir
+    mkdir install
+    ./configure --prefix=$glpk_dir/install
+    make clean
+    make -j$(nproc)
+    make -j$(nproc) check
+    make install
+
+    # BOOST
+    cd $boost_dir
+    mkdir install
+    ./bootstrap.sh --prefix=$boost_dir/install
+    ./b2 install --prefix=$boost_dir/install -j$(nproc)   
+
+    # IPOPT is required for SCIP
+    cd $ipopt_dir
+    mkdir install
+    ./configure --prefix=$ipopt_dir/install
+    make -j$(nproc)
+    make -j$(nproc) test
+    make install
+    
+    # COPY DOWNLOADED HMETIS EXEC TO SCIPOPTSUITE
+    cp $hmetis_dir/hmetis $scip_dir/gcg
+
+    # SCIP
+    cd $scip_dir
+    mkdir {install,build}
+    cd build
+    cmake -DCMAKE_INSTALL_PREFIX=$scip_dir/install \
+    -DBOOST_ROOT=$boost_dir/install \
+    -DIPOPT_DIR=$ipopt_dir/install \
+    -DCRITERION_INCLUDE_DIR=$criterion_dir/include \
+    -DCRITERION_LIBRARY=$criterion_dir/lib/libcriterion.so \
+    -DGMP_DIR=$gmp_dir/install ..   
+    make -j$(nproc)
+    make -j$(nproc) check
+    make install
+}
+
+#############################
+# Process the input options #
+#############################
+
+# Get the options
+no_args=1
+while getopts "dch" option; do
+    case $option in
+        (d) # Download libs
+            Download
+            ;;
+        (c) # Compile libs
+            Compile
+            ;;
+        (\?) # Invalid option
+            echo "Error: Invalid option"
+            exit 1
+            ;;
+        (h) # display Help
+            Help
+            exit 0
+            ;;
+    esac
+    no_args=0
+done
+[[ "$no_args" == "1" ]] && { Help; exit 1; }
+shift "$((OPTIND-1))"

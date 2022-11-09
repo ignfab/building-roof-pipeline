@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+cmake_version=$cmake
+
+CMAKE_WORKING_DIR="cmake-build"
+
+if [ -d $CMAKE_WORKING_DIR ]
+then
+    rm -rf $CMAKE_WORKING_DIR
+fi
+
+mkdir $CMAKE_WORKING_DIR && cd $_
+
+../cpplibs/cmake-$cmake_version/bin/cmake ..
+../cpplibs/cmake-$cmake_version/bin/cmake --build . -j$(($(nproc)-1))

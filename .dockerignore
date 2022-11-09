@@ -1,0 +1,10 @@
+# Ignore everything
+*
+
+# Allow some files and directories
+!/script_templates
+!/cgal_components
+!/*.sh
+!/*.py
+!/*.txt
+!/*.cfg

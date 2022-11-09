@@ -1,0 +1,32 @@
+# ignore temporary directories
+.idea/
+.vscode/
+cmake-build/
+venv/
+tmp/
+cpplibs/
+results/
+build/
+dsm_import/
+__pycache__/
+target/
+
+# ignore temporary files
+*.geojson
+*.json
+*.tiff
+*.tif
+*.shp
+*.prj
+*.dbf
+*.xml
+*.ply
+*.off
+*.obj
+*.bvg
+*.gz
+
+# ignore temporary scripts
+CMakeLists.txt
+build_cgal_components.sh
+dl_and_build_cpplibs.sh

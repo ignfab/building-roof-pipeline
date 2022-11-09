@@ -1,0 +1,138 @@
+cmake_minimum_required(VERSION $cmake)
+
+project(pipeline-reconstruction VERSION 0.1 LANGUAGES CXX)
+set(CMAKE_CXX_STANDARD 17)
+enable_language(CXX)
+
+set(Boost_USE_STATIC_LIBS OFF)
+set(Boost_USE_MULTITHREADED ON)
+set(Boost_USE_STATIC_RUNTIME OFF)
+set(CMAKE_BUILD_TYPE Release)
+
+set(SOURCES_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cgal_components/)
+
+set(LIBS_DIR ${CMAKE_CURRENT_SOURCE_DIR}/cpplibs/)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+set(CGAL_DIR ${LIBS_DIR}CGAL-$cgal/)
+set(GMP_INCLUDE_DIR ${LIBS_DIR}gmp-$gmp/install/include)
+set(GMP_LIBRARIES ${LIBS_DIR}gmp-$gmp/install/lib/libgmp.so)
+set(MPFR_INCLUDE_DIR ${LIBS_DIR}mpfr-$mpfr/install/include)
+set(MPFR_LIBRARIES ${LIBS_DIR}mpfr-$mpfr/install/lib/libmpfr.so)
+set(GLPK_INCLUDE_DIR ${LIBS_DIR}glpk-$glpk/install/include)
+set(GLPK_LIBRARIES ${LIBS_DIR}glpk-$glpk/install/lib/libglpk.so)
+set(SCIP_INCLUDE_DIR ${LIBS_DIR}scipoptsuite-$scip/install/include)
+set(SCIP_DIR ${LIBS_DIR}scipoptsuite-$scip/install/lib/cmake/scip)
+set(EIGEN3_DIR ${LIBS_DIR}eigen-$eigen/cmake)
+set(EIGEN3_INCLUDE_DIR ${LIBS_DIR}eigen-$eigen)
+set(BOOST_VERSION $boost)
+string(REPLACE "\." "_" BOOST_SNAKE_VERSION ${BOOST_VERSION})
+set(Boost_INCLUDE_DIR ${LIBS_DIR}boost_${BOOST_SNAKE_VERSION})
+configure_file(${LIBS_DIR}gmp-$gmp/install/lib/libgmp.so ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libgmp.so COPYONLY)
+configure_file(${LIBS_DIR}mpfr-$mpfr/install/lib/libmpfr.so ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libmpfr.so COPYONLY)
+configure_file(${LIBS_DIR}glpk-$glpk/install/lib/libglpk.so ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libglpk.so COPYONLY)
+configure_file(${LIBS_DIR}scipoptsuite-$scip/install/lib/libscip.so ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libscip.so COPYONLY)
+
+# Find packages
+
+find_package(CGAL REQUIRED)
+find_package(GMP REQUIRED)
+find_package(MPFR REQUIRED)
+
+find_package(Eigen3 $eigen)
+include(CGAL_Eigen3_support)
+if(NOT TARGET CGAL::Eigen3_support)
+    message(
+        STATUS
+        "NOTICE: This project requires Eigen 3.1 (or greater) and will not be compiled."
+    )
+    return()
+endif()
+
+find_package(SCIP)
+include(CGAL_SCIP_support)
+if(NOT TARGET CGAL::SCIP_support)
+    find_package(GLPK)
+    include(CGAL_GLPK_support)
+    if(NOT TARGET CGAL::GLPK_support)
+        message(
+            STATUS
+            "NOTICE: This project requires either SCIP or GLPK, and will not be compiled"
+        )
+        return()
+    endif()
+endif()
+
+find_package(Boost REQUIRED)
+if(NOT Boost_FOUND)
+  message(
+    STATUS
+      "NOTICE: This project requires the Boost library, and will not be compiled."
+  )
+  return()
+endif()
+
+# Edge collapse
+
+set(EXEC0 edge-collapse)
+add_executable(${EXEC0} ${SOURCES_DIR}edge-collapse.cpp)
+target_link_libraries(${EXEC0} CGAL::CGAL)
+
+# Ransac
+
+set(EXEC1 ransac)
+add_executable(${EXEC1} ${SOURCES_DIR}ransac.cpp)
+target_link_libraries(${EXEC1} CGAL::CGAL)
+
+# Region growing
+
+set(EXEC2 region-growing-mesh)
+add_executable(${EXEC2} ${SOURCES_DIR}region-growing-mesh.cpp)
+target_link_libraries(${EXEC2} PUBLIC CGAL::CGAL CGAL::Eigen3_support)
+
+set(EXEC21 region-growing-points)
+add_executable(${EXEC21} ${SOURCES_DIR}region-growing-points.cpp)
+target_link_libraries(${EXEC21} PUBLIC CGAL::CGAL CGAL::Eigen3_support)
+
+# Polygonal surface reconstruction
+
+set(EXEC3 psr-ransac)
+add_executable(${EXEC3} ${SOURCES_DIR}psr-ransac.cpp) 
+if(TARGET CGAL::SCIP_support)
+    target_link_libraries(${EXEC3} PUBLIC CGAL::CGAL CGAL::SCIP_support)
+    message(
+      STATUS
+        "NOTICE: PSR RANSAC will use SCIP"
+    )
+else()
+    target_link_libraries(${EXEC3} PUBLIC CGAL::CGAL CGAL::GLPK_support)
+    message(
+      STATUS
+        "NOTICE: PSR RANSAC will use GLPK"
+    )
+endif()
+
+set(EXEC4 psr-region-growing)
+add_executable(${EXEC4} ${SOURCES_DIR}psr-region-growing.cpp)
+if(TARGET CGAL::SCIP_support)
+    target_link_libraries(${EXEC4} PUBLIC CGAL::CGAL CGAL::SCIP_support)
+    message(
+      STATUS
+        "NOTICE: PSR REGION GROWING will use SCIP"
+    )
+else()
+    target_link_libraries(${EXEC4} PUBLIC CGAL::CGAL CGAL::GLPK_support)
+    message(
+      STATUS
+        "NOTICE: PSR REGION GROWING will use GLPK"
+    )
+endif()
+target_link_libraries(${EXEC4} PUBLIC CGAL::Eigen3_support)
+
+# Structuring
+
+set(EXEC5 structuring)
+add_executable(${EXEC5} ${SOURCES_DIR}structuring.cpp)
+target_link_libraries(${EXEC5} CGAL::CGAL)
