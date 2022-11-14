@@ -25,10 +25,7 @@ The prefered solution for running the Python scripts is `venv`.
 Create the `venv` first from the root of the project
 
 ```shell
-mkdir venv
-cd venv
-python3 -m venv roof
-cd ..
+python3 -m venv venv/roof
 source venv/roof/bin/activate # will activate venv
 ```
 
