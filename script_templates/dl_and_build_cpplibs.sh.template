@@ -191,6 +191,9 @@ Compile()
 
     # MPFR
     cd $mpfr_dir
+    # Temporary patch for 4.1.1
+    wget https://www.mpfr.org/mpfr-current/allpatches -O patch
+    patch -N -Z -p1 < patch
     mkdir install
     ./configure --prefix=$mpfr_dir/install --with-gmp=$gmp_dir/install
     make clean
