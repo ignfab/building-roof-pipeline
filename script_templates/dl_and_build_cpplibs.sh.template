@@ -47,7 +47,7 @@ gmp_archive=gmp-$gmp_version.tar.xz
 gmp_dir=$DL_DIR/gmp-$gmp_version
 
 mpfr_version=$mpfr
-mpfr_archive=mpfr-$mpfr_version.tar.xz
+mpfr_archive=mpfr-$mpfr_version.tar.gz
 mpfr_dir=$DL_DIR/mpfr-$mpfr_version
 
 eigen_version=$eigen
@@ -124,7 +124,7 @@ Download()
     rm $gmp_archive
 
     # MPFR
-    WgetURL $DL_DIR "https://www.mpfr.org/mpfr-current/$mpfr_archive"
+    WgetURL $DL_DIR "https://gitlab.inria.fr/mpfr/mpfr/-/archive/$mpfr_version/$mpfr_archive"
     tar -xf $mpfr_archive
     rm $mpfr_archive
 
@@ -143,10 +143,10 @@ Download()
     tar -zxf $ipopt_archive
     rm $ipopt_archive
 
-    # HMETIS
-    WgetURL $DL_DIR "http://glaros.dtc.umn.edu/gkhome/fetch/sw/hmetis/$hmetis_archive"
-    tar -zxf $hmetis_archive
-    rm $hmetis_archive
+    # HMETIS # Broken download URL
+    #WgetURL $DL_DIR "http://glaros.dtc.umn.edu/gkhome/fetch/sw/hmetis/$hmetis_archive"
+    #tar -zxf $hmetis_archive
+    #rm $hmetis_archive
 
     # CRITERION
     WgetURL $DL_DIR "https://github.com/Snaipe/Criterion/releases/download/v2.4.1/$criterion_archive"
@@ -191,10 +191,8 @@ Compile()
 
     # MPFR
     cd $mpfr_dir
-    # Temporary patch for 4.1.1
-    wget https://www.mpfr.org/mpfr-current/allpatches -O patch
-    patch -N -Z -p1 < patch
     mkdir install
+    bash autogen.sh
     ./configure --prefix=$mpfr_dir/install --with-gmp=$gmp_dir/install
     make clean
     make -j$(nproc)
@@ -225,7 +223,7 @@ Compile()
     make install
     
     # COPY DOWNLOADED HMETIS EXEC TO SCIPOPTSUITE
-    cp $hmetis_dir/hmetis $scip_dir/gcg
+    #cp $hmetis_dir/hmetis $scip_dir/gcg
 
     # SCIP
     cd $scip_dir
