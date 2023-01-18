@@ -47,7 +47,7 @@ gmp_archive=gmp-$gmp_version.tar.xz
 gmp_dir=$DL_DIR/gmp-$gmp_version
 
 mpfr_version=$mpfr
-mpfr_archive=mpfr-$mpfr_version.tar.gz
+mpfr_archive=mpfr-$mpfr_version.tar.xz
 mpfr_dir=$DL_DIR/mpfr-$mpfr_version
 
 eigen_version=$eigen
@@ -124,7 +124,7 @@ Download()
     rm $gmp_archive
 
     # MPFR
-    WgetURL $DL_DIR "https://gitlab.inria.fr/mpfr/mpfr/-/archive/$mpfr_version/$mpfr_archive"
+    WgetURL $DL_DIR "https://www.mpfr.org/mpfr-$mpfr_version/$mpfr_archive"
     tar -xf $mpfr_archive
     rm $mpfr_archive
 
@@ -191,8 +191,10 @@ Compile()
 
     # MPFR
     cd $mpfr_dir
+    # Temporary patch for 4.1.1
+    wget https://www.mpfr.org/mpfr-$mpfr_version/allpatches -O patch
+    patch -N -Z -p1 < patch
     mkdir install
-    bash autogen.sh
     ./configure --prefix=$mpfr_dir/install --with-gmp=$gmp_dir/install
     make clean
     make -j$(nproc)
