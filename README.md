@@ -25,7 +25,7 @@ The prefered solution for running the Python scripts is `venv`.
 Create the `venv` first from the root of the project
 
 ```shell
-python3 -m pip install virtualenv # if venv is not yet installed
+sudo apt-get install python3-pip python3-venv # if venv or pip were not yet installed
 python3 -m venv venv/roof # create venv
 source venv/roof/bin/activate # activate venv
 ```
@@ -42,7 +42,7 @@ Install GDAL using apt first. Below an example for Ubuntu.
 Then install GDAL Python with venv activated
 
 ```shell
-(roof) apt-get install build-essential python3-dev
+(roof) sudo apt-get install build-essential python3-dev
 (roof) python3 -m pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"
 ```
 
@@ -82,7 +82,7 @@ With venv activated simply run
 
 ## Running this project
 
-A simple Python pipeline script is provided. The following command will test import and transform of a DMS extract.
+A simple Python pipeline script is provided. The following command will test import and transform of a DSM extract.
 
 ```
 (roof) python3 pipeline.py
@@ -99,7 +99,7 @@ See `python3 pipeline.py --help` to get more information on how to use the pipel
 
 ## How it works
 
-The `dsm_import.py` script uses [GDAL/OGR Python bindings](https://gdal.org/api/python_bindings.html) and  [shapely](https://shapely.readthedocs.io/en/stable/manual.html).  
+The `dsm_import.py` script uses [GDAL/OGR Python bindings](https://gdal.org/api/python_bindings.html) and [shapely](https://shapely.readthedocs.io/en/stable/manual.html).  
 The `dsm_transform.py` script uses numpy extensively to transform the downloaded DSM extract into a point cloud or a mesh including normals computation. The scripts uses the idea of sliding window implemented using [numpy broadcasting](https://numpy.org/doc/stable/user/basics.broadcasting.html) to create faces and vertex normals efficiently.  
 The CGAL documentation provides all the necessary information to modify or add new behaviours to the `.cpp` files in `cgal_components/`.
 
