@@ -40,21 +40,20 @@ python3 -m venv venv/roof # create venv
 source venv/roof/bin/activate # activate venv
 ```
 
-### Install GDAL Python with venv
-
-Then install GDAL Python. Make sure the `roof` virtual environment is activated.  
-This step requires `libgdal-dev`, `gdal-bin` and `python3-dev` installed.
-
-```shell
-(roof) python3 -m pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"
-```
-
 ### Install Python dependencies with venv
 
 With `roof` virtual environment activated simply run
 
 ```shell
 (roof) python3 -m pip install -r requirements.txt
+```
+
+### Install GDAL Python with venv
+
+Then install GDAL Python. 
+
+```shell
+(roof) python3 -m pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"
 ```
 
 ### Build CGAL components executables
