@@ -25,7 +25,6 @@ git clone https://github.com/ignfab/building-roof-pipeline.git
 
 ```shell
 sudo add-apt-repository ppa:ubuntugis/ppa
-sudo apt-get update 
 sudo apt-get install python3-pip python3-venv python3-dev libgdal-dev gdal-bin gettext-base build-essential wget m4 xz-utils libssl-dev libtbb-dev libreadline-dev pkg-config liblapack-dev libgsl-dev gfortran libopenblas-dev libgsl-dev libcliquer-dev libopenmpi-dev
 ```
 
