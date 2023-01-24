@@ -10,7 +10,10 @@ This project contains sample Bash and Python scripts along with C++ CGAL executa
     * [Edge Collapse](https://doc.cgal.org/latest/Surface_mesh_simplification/index.html)
     * [Polygonal Surface Reconstruction](https://doc.cgal.org/latest/Polygonal_surface_reconstruction/index.html)
 
+
 ## Building this project
+
+The following instructions have been tested on Ubuntu 22.04.
 
 First clone this project
 
@@ -18,37 +21,38 @@ First clone this project
 git clone https://github.com/ignfab/building-roof-pipeline.git
 ```
 
-The prefered solution for running the Python scripts is `venv`.
+### Install required packages
+
+```shell
+sudo add-apt-repository ppa:ubuntugis/ppa
+sudo apt-get update 
+sudo apt-get install python3-pip python3-venv python3-dev libgdal-dev gdal-bin gettext-base build-essential wget m4 xz-utils libssl-dev libtbb-dev libreadline-dev pkg-config liblapack-dev libgsl-dev gfortran libopenblas-dev libgsl-dev libcliquer-dev libopenmpi-dev
+```
 
 ### Create venv
 
-Create the `venv` first from the root of the project
+The prefered solution for running the Python scripts is to use virtualenv.  
+
+Enter the project directory and create a virtual environment: 
 
 ```shell
-sudo apt-get install python3-pip python3-venv # if venv or pip were not yet installed
+cd building-roof-pipeline
 python3 -m venv venv/roof # create venv
 source venv/roof/bin/activate # activate venv
 ```
 
 ### Install GDAL Python with venv
 
-Install GDAL using apt first. Below an example for Ubuntu.
+Then install GDAL Python. Make sure the `roof` virtual environment is activated.  
+This step requires `libgdal-dev`, `gdal-bin` and `python3-dev` installed.
 
 ```shell
-(roof) sudo add-apt-repository ppa:ubuntugis/ppa
-(roof) sudo apt-get install libgdal-dev gdal-bin
-```
-
-Then install GDAL Python with venv activated
-
-```shell
-(roof) sudo apt-get install build-essential python3-dev
 (roof) python3 -m pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"
 ```
 
 ### Install Python dependencies with venv
 
-With venv activated simply run
+With `roof` virtual environment activated simply run
 
 ```shell
 (roof) python3 -m pip install -r requirements.txt
@@ -56,33 +60,27 @@ With venv activated simply run
 
 ### Build CGAL components executables
 
-1. Install necessary dependencies using apt:
-
+1. Create download and compilation scripts based on versions defined in `cpplibs_version.cfg` by using the following command:
    ```shell
-   (roof) sudo apt-get install gettext-base build-essential wget m4 xz-utils libssl-dev libtbb-dev libreadline-dev pkg-config liblapack-dev libgsl-dev gfortran libopenblas-dev libgsl-dev libcliquer-dev libopenmpi-dev
+   bash patch_scripts.sh
    ```
+   This script copies scripts templates from `script_templates/` directory and replace version numbers using `envsubst` available in `gettext-base` package.
 
-2. Create download and compilation scripts based on versions defined in `cpplibs_version.cfg` by using the following command:
+2. Run the script responsible for downloading and compiling the C++ libraries needed for building CGAL components:
    ```shell
-   (roof) bash patch_scripts.sh
-   ```
-   This script copies scripts templates from `script_templates` and replace version numbers using `envsubst`.
-
-3. Run the script responsible for downloading and compiling the C++ libraries needed for building CGAL components:
-   ```shell
-   (roof) bash dl_and_build_cpplibs.sh -dc
+   bash dl_and_build_cpplibs.sh -dc
    ```
    See `bash dl_and_build_cpplibs.sh -h` for more information. The downloaded and compiled libraries are available in the `cpplibs/` directory.
 
 4. Run the script responsible for building CGAL components:
    ```shell
-   (roof) bash build_cgal_components.sh
+   bash build_cgal_components.sh
    ``` 
    The CGAL executables are available in the `cmake-build/` directory
 
 ## Running this project
 
-A simple Python pipeline script is provided. The following command will test import and transform of a DSM extract.
+A simple Python pipeline script is provided. The following command will test import and transform of a DSM extract. Make sure the `roof` virtual environment is activated.
 
 ```
 (roof) python3 pipeline.py
