@@ -252,8 +252,8 @@ Compile()
     # MPFR
     cd $mpfr_dir
     # Temporary patch when necessary
-    # wget https://www.mpfr.org/mpfr-$mpfr_version/allpatches -O patch
-    # patch -N -Z -p1 < patch
+    wget https://www.mpfr.org/mpfr-$mpfr_version/allpatches -O patch
+    patch -N -Z -p1 < patch
     mkdir install
     ./configure --prefix=$mpfr_dir/install --with-gmp=$gmp_dir/install
     make clean
