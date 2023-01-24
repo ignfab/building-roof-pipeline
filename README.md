@@ -13,7 +13,7 @@ This project contains sample Bash and Python scripts along with C++ CGAL executa
 
 ## Building this project
 
-The following instructions have been tested on Ubuntu 22.04.
+The following instructions have been tested on Ubuntu 22.04 and 20.04
 
 First clone this project
 
@@ -28,14 +28,34 @@ sudo add-apt-repository ppa:ubuntugis/ppa
 sudo apt-get install python3-pip python3-venv python3-dev libgdal-dev gdal-bin gettext-base build-essential wget m4 xz-utils libssl-dev libtbb-dev libreadline-dev pkg-config liblapack-dev libgsl-dev gfortran libopenblas-dev libgsl-dev libcliquer-dev libopenmpi-dev
 ```
 
+### Build CGAL components executables
+
+1. Enter the projet directory and create download and compilation scripts based on versions defined in `cpplibs_version.cfg` by using the following command:
+   ```shell
+   cd building-roof-pipeline/
+   bash patch_scripts.sh
+   ```
+   This script copies scripts templates from `script_templates/` directory and replace version numbers using `envsubst` available in `gettext-base` package.
+
+2. Run the script responsible for downloading and compiling the C++ libraries needed for building CGAL components:
+   ```shell
+   bash dl_and_build_cpplibs.sh -dc
+   ```
+   See `bash dl_and_build_cpplibs.sh -h` for more information. The downloaded and compiled libraries are available in the `cpplibs/` directory.
+
+4. Run the script responsible for building CGAL components:
+   ```shell
+   bash build_cgal_components.sh
+   ``` 
+   The CGAL executables are available in the `cmake-build/` directory
+
 ### Create venv
 
 The prefered solution for running the Python scripts is to use virtualenv.  
 
-Enter the project directory and create a virtual environment: 
+Create a virtual environment: 
 
 ```shell
-cd building-roof-pipeline
 python3 -m venv venv/roof # create venv
 source venv/roof/bin/activate # activate venv
 ```
@@ -56,31 +76,11 @@ Then install GDAL Python.
 (roof) python3 -m pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"
 ```
 
-### Build CGAL components executables
-
-1. Create download and compilation scripts based on versions defined in `cpplibs_version.cfg` by using the following command:
-   ```shell
-   bash patch_scripts.sh
-   ```
-   This script copies scripts templates from `script_templates/` directory and replace version numbers using `envsubst` available in `gettext-base` package.
-
-2. Run the script responsible for downloading and compiling the C++ libraries needed for building CGAL components:
-   ```shell
-   bash dl_and_build_cpplibs.sh -dc
-   ```
-   See `bash dl_and_build_cpplibs.sh -h` for more information. The downloaded and compiled libraries are available in the `cpplibs/` directory.
-
-4. Run the script responsible for building CGAL components:
-   ```shell
-   bash build_cgal_components.sh
-   ``` 
-   The CGAL executables are available in the `cmake-build/` directory
-
 ## Running this project
 
 A simple Python pipeline script is provided. The following command will test import and transform of a DSM extract. Make sure the `roof` virtual environment is activated.
 
-```
+```shell
 (roof) python3 pipeline.py
 ```
 
