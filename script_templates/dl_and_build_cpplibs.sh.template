@@ -204,7 +204,7 @@ Download()
     rm $ipopt_archive
 
     # HMETIS
-    WgetURL $DL_DIR "http://glaros.dtc.umn.edu/gkhome/fetchZOB/sw/hmetis/$hmetis_archive"
+    WgetURL $DL_DIR "http://glaros.dtc.umn.edu/gkhome/fetch/sw/hmetis/$hmetis_archive"
     tar -zxf $hmetis_archive
     rm $hmetis_archive
 
