@@ -16,6 +16,66 @@ Help()
    echo
 }
 
+#########
+# Style #
+#########
+
+color() {
+  text="${@:2}"
+
+  if [ -z "$text" ]
+  then 
+    text=$(cat)
+  fi
+
+  echo -ne "\033["
+  case "$1" in
+    black)        echo -n "30";;
+    red)          echo -n "31";;
+    green)        echo -n "32";;
+    yellow)       echo -n "33";;
+    blue)         echo -n "34";;
+    magenta)      echo -n "35";;
+    cyan)         echo -n "36";;
+    lightgray)    echo -n "37";;
+    darkgray)     echo -n "90";;
+    lightred)     echo -n "91";;
+    lightgreen)   echo -n "92";;
+    lightyellow)  echo -n "93";;
+    lightblue)    echo -n "94";;
+    lightmagenta) echo -n "95";;
+    lightcyan)    echo -n "96";;
+    white)        echo -n "97";;
+    default|*)    echo -n "39";;
+  esac
+  echo -n "m"
+  echo -ne "$text"
+  echo -ne "\033[0m"
+}
+
+style() {
+  text="${@:2}"
+
+  if [ -z "$text" ]
+  then 
+    text=$(cat)
+  fi
+
+  echo -ne "\033["
+  case "$1" in
+    bold|bright)     echo -n "1";;
+    dim|italic)      echo -n "2";;
+    underline)       echo -n "4";;
+    blink)           echo -n "5";;
+    reverse)         echo -n "7";;
+    hidden)          echo -n "8";;
+    reset|default|*) echo -n "0";;
+  esac
+  echo -n "m"
+  echo -ne "$text"
+  echo -ne "\033[0m"
+}
+
 ##################
 # Init variables #
 ##################
@@ -84,10 +144,10 @@ WgetURL()
     wget --retry-connrefused --waitretry=1 --timeout=15 --read-timeout=20 --quiet $2
     if [ $? -ne 0 ]
     then
-      echo "Cannot download $2"
+      echo "$(color red "Cannot download $2" | style bold)"
       exit 1
     else
-      echo "$2 successfully downloaded"
+      echo "$(color green "$2 successfully downloaded")" 
     fi
 }
 
@@ -124,7 +184,7 @@ Download()
     rm $gmp_archive
 
     # MPFR
-    WgetURL $DL_DIR "https://www.mpfr.org/mpfr-current/$mpfr_archive"
+    WgetURL $DL_DIR "https://www.mpfr.org/mpfr-$mpfr_version/$mpfr_archive"
     tar -xf $mpfr_archive
     rm $mpfr_archive
 
@@ -149,7 +209,7 @@ Download()
     rm $hmetis_archive
 
     # CRITERION
-    WgetURL $DL_DIR "https://github.com/Snaipe/Criterion/releases/download/v2.4.1/$criterion_archive"
+    WgetURL $DL_DIR "https://github.com/Snaipe/Criterion/releases/download/v$criterion_version/$criterion_archive"
     tar -xf $criterion_archive
     rm $criterion_archive
 
@@ -167,8 +227,8 @@ Compile()
     # Check if m4 is available
     if ! command -v m4 &> /dev/null
     then
-        echo "m4 could not be found. GMP compilation will fail. Exiting"
-        exit
+        echo "$(color red "m4 could not be found. GMP compilation will fail. Exiting" | style bold)"
+        exit 2
     fi
 
     # CMAKE
@@ -191,9 +251,9 @@ Compile()
 
     # MPFR
     cd $mpfr_dir
-    # Temporary patch for 4.1.1
-    wget https://www.mpfr.org/mpfr-current/allpatches -O patch
-    patch -N -Z -p1 < patch
+    # Temporary patch necessary for mpfr 4.1.1
+    # wget https://www.mpfr.org/mpfr-$mpfr_version/allpatches -O patch
+    # patch -N -Z -p1 < patch
     mkdir install
     ./configure --prefix=$mpfr_dir/install --with-gmp=$gmp_dir/install
     make clean

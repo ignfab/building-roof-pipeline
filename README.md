@@ -10,7 +10,10 @@ This project contains sample Bash and Python scripts along with C++ CGAL executa
     * [Edge Collapse](https://doc.cgal.org/latest/Surface_mesh_simplification/index.html)
     * [Polygonal Surface Reconstruction](https://doc.cgal.org/latest/Polygonal_surface_reconstruction/index.html)
 
+
 ## Building this project
+
+The following instructions have been tested on Ubuntu 22.04 and 20.04
 
 First clone this project
 
@@ -18,55 +21,23 @@ First clone this project
 git clone https://github.com/ignfab/building-roof-pipeline.git
 ```
 
-The prefered solution for running the Python scripts is `venv`.
-
-### Create venv
-
-Create the `venv` first from the root of the project
-
-```shell
-python3 -m venv venv/roof
-source venv/roof/bin/activate # will activate venv
-```
-
-### Install GDAL Python with venv
-
-Install GDAL using apt first. Below an example for Ubuntu.
+### Install required packages
 
 ```shell
 sudo add-apt-repository ppa:ubuntugis/ppa
-sudo apt-get install libgdal-dev gdal-bin
-```
-
-Then install GDAL Python with venv activated
-
-```shell
-(roof) python3 -m pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"
-```
-
-### Install Python dependencies with venv
-
-With venv activated simply run
-
-```shell
-(roof) python3 -m pip install -r requirements.txt
+sudo apt-get update && sudo apt-get install python3-pip python3-venv python3-dev libgdal-dev gdal-bin gettext-base build-essential wget m4 xz-utils libssl-dev libtbb-dev libreadline-dev pkg-config liblapack-dev libgsl-dev gfortran libopenblas-dev libgsl-dev libcliquer-dev libopenmpi-dev
 ```
 
 ### Build CGAL components executables
 
-1. Install necessary dependencies using apt:
-
+1. Enter the projet directory and create download and compilation scripts based on versions defined in `cpplibs_version.cfg` by using the following command:
    ```shell
-   sudo apt-get install gettext-base build-essential wget m4 xz-utils libssl-dev libtbb-dev libreadline-dev pkg-config liblapack-dev libgsl-dev gfortran libopenblas-dev libgsl-dev libcliquer-dev libopenmpi-dev
-   ```
-
-2. Create download and compilation scripts based on versions defined in `cpplibs_version.cfg` by using the following command:
-   ```shell
+   cd building-roof-pipeline/
    bash patch_scripts.sh
    ```
-   This script copies scripts templates from `script_templates` and replace version numbers using `envsubst`.
+   This script copies scripts templates from `script_templates/` directory and replace version numbers using `envsubst` available in `gettext-base` package.
 
-3. Run the script responsible for downloading and compiling the C++ libraries needed for building CGAL components:
+2. Run the script responsible for downloading and compiling the C++ libraries needed for building CGAL components:
    ```shell
    bash dl_and_build_cpplibs.sh -dc
    ```
@@ -78,26 +49,53 @@ With venv activated simply run
    ``` 
    The CGAL executables are available in the `cmake-build/` directory
 
+### Create venv
+
+The prefered solution for running the Python scripts is to use virtualenv.  
+
+Create a virtual environment: 
+
+```shell
+python3 -m venv venv/roof # create venv
+source venv/roof/bin/activate # activate venv
+```
+
+### Install Python dependencies with venv
+
+With `roof` virtual environment activated simply run
+
+```shell
+(roof) python3 -m pip install -r requirements.txt
+```
+
+### Install GDAL Python with venv
+
+Then install GDAL Python. 
+
+```shell
+(roof) python3 -m pip install GDAL==$(gdal-config --version) --global-option=build_ext --global-option="-I/usr/include/gdal"
+```
+
 ## Running this project
 
-A simple Python pipeline script is provided. The following command will test import and transform of a DMS extract.
+A simple Python pipeline script is provided. The following command will test import and transform of a DSM extract. Make sure the `roof` virtual environment is activated.
 
-```
-python3 pipeline.py
+```shell
+(roof) python3 pipeline.py
 ```
 
 Under the hood, `pipeline.py` uses `.ini` file to configure steps and variables. By default `pipeline.py` uses the `default.ini` file which only performs a sample DSM download and tranformation.  
 A sample `full_pipeline.ini` file is provided which contains all the possible steps and variable for the pipeline
 
 ```shell
-python3 pipeline.py --file full_pipeline.ini
+(roof) python3 pipeline.py --file full_pipeline.ini
 ```
 
 See `python3 pipeline.py --help` to get more information on how to use the pipeline.
 
 ## How it works
 
-The `dsm_import.py` script uses [GDAL/OGR Python bindings](https://gdal.org/api/python_bindings.html) and  [shapely](https://shapely.readthedocs.io/en/stable/manual.html).  
+The `dsm_import.py` script uses [GDAL/OGR Python bindings](https://gdal.org/api/python_bindings.html) and [shapely](https://shapely.readthedocs.io/en/stable/manual.html).  
 The `dsm_transform.py` script uses numpy extensively to transform the downloaded DSM extract into a point cloud or a mesh including normals computation. The scripts uses the idea of sliding window implemented using [numpy broadcasting](https://numpy.org/doc/stable/user/basics.broadcasting.html) to create faces and vertex normals efficiently.  
 The CGAL documentation provides all the necessary information to modify or add new behaviours to the `.cpp` files in `cgal_components/`.
 
